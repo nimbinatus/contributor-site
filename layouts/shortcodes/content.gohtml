@@ -1,0 +1,22 @@
+{{/*
+
+This shortcode gathers Markdown from the GitHub API v3 (REST-based) based on a given org and repo and injects it into
+the file before Markdown rendering begins.
+
+Format:  {{% content <org> <repo> <filename with extension> %}}
+
+*/}}
+
+{{ $org := .Get 0 }}
+{{ $repo := .Get 1 }}
+{{ $file  := .Get 2 }}
+{{ if (fileExists $file) -}}
+{{ readFile $file }}
+{{ else -}}
+{{ $urlPre := printf "https://api.github.com/repos/%s/%s/contents/" $org $repo }}
+{{ $urlRef := "?ref=master" }}
+{{ $urlMark := getJSON $urlPre $file $urlRef }}
+{{ $decodeContent := $urlMark.content | base64Decode }}
+{{ $finalContent := replace $decodeContent ".md" "" }}
+{{ $finalContent }}
+{{- end }}
